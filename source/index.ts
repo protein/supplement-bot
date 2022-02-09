@@ -110,6 +110,15 @@ const addItemToNotion = async (row: any) => {
             },
           ],
         },
+        Title: {
+          rich_text: [
+            {
+              text: {
+                content: row.title,
+              },
+            },
+          ],
+        },
         Category: {
           select: {
             name: row.category,
@@ -122,8 +131,7 @@ const addItemToNotion = async (row: any) => {
         },
       },
     });
-    console.log(response);
-    console.log("Success! Entry added.");
+    console.log(`---------- ENTRY ADDED -----------`);
   } catch (error) {
     console.error(error);
   }
@@ -154,6 +162,8 @@ client.on("messageReactionAdd", async (reaction) => {
         )?.name,
         sent: message.createdAt,
       };
+      console.log(`---------- ADDING ROW -----------`);
+      console.log(row);
       await addItemToNotion(row);
     } catch (error) {
       console.log(error);

@@ -97,6 +97,15 @@ const addItemToNotion = (row) => __awaiter(void 0, void 0, void 0, function* () 
                         },
                     ],
                 },
+                Title: {
+                    rich_text: [
+                        {
+                            text: {
+                                content: row.title,
+                            },
+                        },
+                    ],
+                },
                 Category: {
                     select: {
                         name: row.category,
@@ -109,8 +118,7 @@ const addItemToNotion = (row) => __awaiter(void 0, void 0, void 0, function* () 
                 },
             },
         });
-        console.log(response);
-        console.log("Success! Entry added.");
+        console.log(`---------- ENTRY ADDED -----------`);
     }
     catch (error) {
         console.error(error);
@@ -141,6 +149,8 @@ client.on("messageReactionAdd", (reaction) => __awaiter(void 0, void 0, void 0, 
                 category: (_e = supplementChannels.find((channel) => channel.id === message.channelId)) === null || _e === void 0 ? void 0 : _e.name,
                 sent: message.createdAt,
             };
+            console.log(`---------- ADDING ROW -----------`);
+            console.log(row);
             yield addItemToNotion(row);
         }
         catch (error) {
