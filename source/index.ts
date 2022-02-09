@@ -53,7 +53,7 @@ const isSupplementReaction = ({
 }): boolean => {
   if (
     supplementChannelIds().includes(message.channelId) &&
-    reaction.emoji.id === "940181818437693440"
+    reaction.emoji.id === "940946234741510154"
   )
     return true;
   return false;

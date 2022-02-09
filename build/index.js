@@ -44,7 +44,7 @@ const capitalize = (word) => {
 };
 const isSupplementReaction = ({ message, reaction, }) => {
     if (supplementChannelIds().includes(message.channelId) &&
-        reaction.emoji.name === "📌")
+        reaction.emoji.id === "940946234741510154")
         return true;
     return false;
 };
