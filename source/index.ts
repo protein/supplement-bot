@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------------//
 // PROTEIN
 // Newsletter Curation Bot (( BETA v0.1.0 ))
-// Fiigmnt | Febuary 8, 2022 | Updated: 
+// Fiigmnt | Febuary 8, 2022 | Updated:
 // ----------------------------------------------------------------------------------//
 
 import {
@@ -80,14 +80,14 @@ const addItemToNotion = async (row: any) => {
     return;
   }
   try {
-    const response = await notion.pages.create({
+    await notion.pages.create({
       parent: { database_id: databaseId },
       properties: {
-        Message: {
+        Title: {
           title: [
             {
               text: {
-                content: row.content,
+                content: row.title || `Source: ${row.source}`,
               },
             },
           ],
@@ -110,14 +110,17 @@ const addItemToNotion = async (row: any) => {
             },
           ],
         },
-        Title: {
+        Message: {
           rich_text: [
             {
               text: {
-                content: row.title,
+                content: row.content,
               },
             },
           ],
+        },
+        Link: {
+          url: row.url,
         },
         Category: {
           select: {
@@ -156,6 +159,7 @@ client.on("messageReactionAdd", async (reaction) => {
         content: message.content,
         sharedBy: `${message.author?.username}#${message.author?.discriminator}`,
         title: message.embeds[0]?.title,
+        url: message.embeds[0]?.url,
         source: findUrlHost(message.embeds[0]?.url),
         category: supplementChannels.find(
           (channel) => channel.id === message.channelId

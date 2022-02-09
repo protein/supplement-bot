@@ -1,8 +1,8 @@
 "use strict";
 // ----------------------------------------------------------------------------------//
-// Main
-// Discord Curation Bot (( BETA v0.1.0 ))
-// Fiigmnt | November 11, 2021 | Updated: January 17, 2022
+// PROTEIN
+// Newsletter Curation Bot (( BETA v0.1.0 ))
+// Fiigmnt | Febuary 8, 2022 | Updated:
 // ----------------------------------------------------------------------------------//
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -67,14 +67,14 @@ const addItemToNotion = (row) => __awaiter(void 0, void 0, void 0, function* () 
         return;
     }
     try {
-        const response = yield notion.pages.create({
+        yield notion.pages.create({
             parent: { database_id: databaseId },
             properties: {
-                Message: {
+                Title: {
                     title: [
                         {
                             text: {
-                                content: row.content,
+                                content: row.title || `Source: ${row.source}`,
                             },
                         },
                     ],
@@ -97,14 +97,17 @@ const addItemToNotion = (row) => __awaiter(void 0, void 0, void 0, function* () 
                         },
                     ],
                 },
-                Title: {
+                Message: {
                     rich_text: [
                         {
                             text: {
-                                content: row.title,
+                                content: row.content,
                             },
                         },
                     ],
+                },
+                Link: {
+                    url: row.url,
                 },
                 Category: {
                     select: {
@@ -126,7 +129,7 @@ const addItemToNotion = (row) => __awaiter(void 0, void 0, void 0, function* () 
 });
 // Check for pin emoji reaction
 client.on("messageReactionAdd", (reaction) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     if (reaction.partial) {
         // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
         try {
@@ -145,8 +148,9 @@ client.on("messageReactionAdd", (reaction) => __awaiter(void 0, void 0, void 0, 
                 content: message.content,
                 sharedBy: `${(_a = message.author) === null || _a === void 0 ? void 0 : _a.username}#${(_b = message.author) === null || _b === void 0 ? void 0 : _b.discriminator}`,
                 title: (_c = message.embeds[0]) === null || _c === void 0 ? void 0 : _c.title,
-                source: findUrlHost((_d = message.embeds[0]) === null || _d === void 0 ? void 0 : _d.url),
-                category: (_e = supplementChannels.find((channel) => channel.id === message.channelId)) === null || _e === void 0 ? void 0 : _e.name,
+                url: (_d = message.embeds[0]) === null || _d === void 0 ? void 0 : _d.url,
+                source: findUrlHost((_e = message.embeds[0]) === null || _e === void 0 ? void 0 : _e.url),
+                category: (_f = supplementChannels.find((channel) => channel.id === message.channelId)) === null || _f === void 0 ? void 0 : _f.name,
                 sent: message.createdAt,
             };
             console.log(`---------- ADDING ROW -----------`);
