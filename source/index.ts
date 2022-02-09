@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------------------------//
-// Main
-// Discord Curation Bot (( BETA v0.1.0 ))
-// Fiigmnt | November 11, 2021 | Updated: January 17, 2022
+// PROTEIN
+// Newsletter Curation Bot (( BETA v0.1.0 ))
+// Fiigmnt | Febuary 8, 2022 | Updated: 
 // ----------------------------------------------------------------------------------//
 
 import {
