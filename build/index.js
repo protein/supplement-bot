@@ -1,7 +1,7 @@
 "use strict";
 // ----------------------------------------------------------------------------------//
-// PROTEIN
-// Newsletter Curation Bot (( BETA v0.1.0 ))
+// PRTN
+// SUPPLEMENT Bot (( BETA v0.1.0 ))
 // Fiigmnt | Febuary 8, 2022 | Updated:
 // ----------------------------------------------------------------------------------//
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -18,13 +18,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const client_1 = require("@notionhq/client");
+const airtable_1 = __importDefault(require("airtable"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const { DISCORD_TOKEN, NOTION_TOKEN, NOTION_DB: databaseId } = process.env;
-const notion = new client_1.Client({
-    auth: NOTION_TOKEN,
-});
+const { DISCORD_TOKEN, AIRTABLE_TOKEN, AIRTABLE_TABLE_KEY } = process.env;
+const base = new airtable_1.default({ apiKey: AIRTABLE_TOKEN }).base(AIRTABLE_TABLE_KEY || "");
+const supplementTable = base("Supplement");
+const shareTable = base("Sharers");
 const client = new discord_js_1.Client({
     intents: [
         discord_js_1.Intents.FLAGS.GUILDS,
@@ -44,7 +44,8 @@ const capitalize = (word) => {
 };
 const isSupplementReaction = ({ message, reaction, }) => {
     if (supplementChannelIds().includes(message.channelId) &&
-        reaction.emoji.id === "940946234741510154")
+        reaction.emoji.id === "940946234741510154" &&
+        reaction.message.author)
         return true;
     return false;
 };
@@ -61,75 +62,48 @@ const findUrlHost = (url) => {
     }
     return "Unavailable";
 };
-const addItemToNotion = (row) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!databaseId) {
-        console.log("No Database Connection!");
-        return;
-    }
-    try {
-        yield notion.pages.create({
-            parent: { database_id: databaseId },
-            properties: {
-                Title: {
-                    title: [
-                        {
-                            text: {
-                                content: row.title || `Source: ${row.source}`,
-                            },
-                        },
-                    ],
-                },
-                "Shared by": {
-                    rich_text: [
-                        {
-                            text: {
-                                content: row.sharedBy,
-                            },
-                        },
-                    ],
-                },
-                Source: {
-                    rich_text: [
-                        {
-                            text: {
-                                content: row.source,
-                            },
-                        },
-                    ],
-                },
-                Message: {
-                    rich_text: [
-                        {
-                            text: {
-                                content: row.content,
-                            },
-                        },
-                    ],
-                },
-                Link: {
-                    url: row.url,
-                },
-                Category: {
-                    select: {
-                        name: row.category,
-                    },
-                },
-                Sent: {
-                    date: {
-                        start: row.sent,
-                    },
+const addItemToAirtable = (row) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    // get users from user table:
+    const results = yield shareTable
+        .select({
+        // TODO: update to use discord id
+        filterByFormula: `{Discord handle} = "${row.sharedBy.handle}"`,
+    })
+        .firstPage();
+    let userId = (_a = results[0]) === null || _a === void 0 ? void 0 : _a.id;
+    if (!userId) {
+        // create user in table
+        console.log(`INFO: User ${row.sharedBy.handle} not found. Creating...`);
+        const result = yield shareTable.create([
+            {
+                fields: {
+                    "Discord handle": row.sharedBy.handle,
+                    "Discord ID": row.sharedBy.id,
                 },
             },
-        });
-        console.log(`---------- ENTRY ADDED -----------`);
+        ]);
+        userId = result[0].getId();
     }
-    catch (error) {
-        console.error(error);
-    }
+    // create record in db
+    yield supplementTable.create([
+        {
+            fields: {
+                "Title 🤖": row.title,
+                "Message 🤖": row.message,
+                "Link 🤖": row.link,
+                "Shared by 🤖": [userId],
+                "Source 🤖": row.source,
+                "Category 🤖": row.category,
+                "Sent 🤖": row.sent,
+                // "Tagged by 🤖": row.taggedBy,
+            },
+        },
+    ]);
 });
 // Check for pin emoji reaction
-client.on("messageReactionAdd", (reaction) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f;
+client.on("messageReactionAdd", (reaction, user) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b, _c, _d, _e;
     if (reaction.partial) {
         // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
         try {
@@ -142,23 +116,33 @@ client.on("messageReactionAdd", (reaction) => __awaiter(void 0, void 0, void 0, 
     }
     const message = reaction.message;
     if (isSupplementReaction({ message, reaction })) {
-        try {
-            // Create data object
-            const row = {
-                content: message.content,
-                sharedBy: `${(_a = message.author) === null || _a === void 0 ? void 0 : _a.username}#${(_b = message.author) === null || _b === void 0 ? void 0 : _b.discriminator}`,
-                title: (_c = message.embeds[0]) === null || _c === void 0 ? void 0 : _c.title,
-                url: (_d = message.embeds[0]) === null || _d === void 0 ? void 0 : _d.url,
-                source: findUrlHost((_e = message.embeds[0]) === null || _e === void 0 ? void 0 : _e.url),
-                category: (_f = supplementChannels.find((channel) => channel.id === message.channelId)) === null || _f === void 0 ? void 0 : _f.name,
-                sent: message.createdAt,
-            };
-            console.log(`---------- ADDING ROW -----------`);
-            console.log(row);
-            yield addItemToNotion(row);
+        if (message.author) {
+            try {
+                // Create data object
+                const row = {
+                    title: (_b = message.embeds[0]) === null || _b === void 0 ? void 0 : _b.title,
+                    message: message.content,
+                    link: (_c = message.embeds[0]) === null || _c === void 0 ? void 0 : _c.url,
+                    sharedBy: {
+                        id: message.author.id,
+                        handle: `${message.author.username}#${message.author.discriminator}`,
+                        // handle: "Will | PRTN#7786",
+                    },
+                    source: findUrlHost((_d = message.embeds[0]) === null || _d === void 0 ? void 0 : _d.url),
+                    category: (_e = supplementChannels.find((channel) => channel.id === message.channelId)) === null || _e === void 0 ? void 0 : _e.name,
+                    sent: message.createdAt,
+                    taggedBy: `${user.username}#${user.discriminator}`,
+                };
+                console.log(`---------- ADDING ROW -----------`);
+                console.log(row);
+                yield addItemToAirtable(row);
+            }
+            catch (error) {
+                console.log(error);
+            }
         }
-        catch (error) {
-            console.log(error);
+        else {
+            console.log("ERROR: Could not find message author");
         }
     }
 }));

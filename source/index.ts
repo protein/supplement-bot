@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------------//
-// PROTEIN
-// Newsletter Curation Bot (( BETA v0.1.0 ))
+// PRTN
+// SUPPLEMENT Bot (( BETA v0.1.0 ))
 // Fiigmnt | Febuary 8, 2022 | Updated:
 // ----------------------------------------------------------------------------------//
 
@@ -12,16 +12,18 @@ import {
   PartialMessage,
   PartialMessageReaction,
 } from "discord.js";
-import { Client as Notion } from "@notionhq/client";
+import Airtable from "airtable";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const { DISCORD_TOKEN, NOTION_TOKEN, NOTION_DB: databaseId } = process.env;
+const { DISCORD_TOKEN, AIRTABLE_TOKEN, AIRTABLE_TABLE_KEY } = process.env;
 
-const notion = new Notion({
-  auth: NOTION_TOKEN,
-});
+const base = new Airtable({ apiKey: AIRTABLE_TOKEN }).base(
+  AIRTABLE_TABLE_KEY || ""
+);
+const supplementTable = base("Supplement");
+const shareTable = base("Sharers");
 
 const client = new Client({
   intents: [
@@ -53,7 +55,8 @@ const isSupplementReaction = ({
 }): boolean => {
   if (
     supplementChannelIds().includes(message.channelId) &&
-    reaction.emoji.id === "940946234741510154"
+    reaction.emoji.id === "940946234741510154" &&
+    reaction.message.author
   )
     return true;
   return false;
@@ -74,74 +77,50 @@ const findUrlHost = (url: string | null): string => {
   return "Unavailable";
 };
 
-const addItemToNotion = async (row: any) => {
-  if (!databaseId) {
-    console.log("No Database Connection!");
-    return;
-  }
-  try {
-    await notion.pages.create({
-      parent: { database_id: databaseId },
-      properties: {
-        Title: {
-          title: [
-            {
-              text: {
-                content: row.title || `Source: ${row.source}`,
-              },
-            },
-          ],
-        },
-        "Shared by": {
-          rich_text: [
-            {
-              text: {
-                content: row.sharedBy,
-              },
-            },
-          ],
-        },
-        Source: {
-          rich_text: [
-            {
-              text: {
-                content: row.source,
-              },
-            },
-          ],
-        },
-        Message: {
-          rich_text: [
-            {
-              text: {
-                content: row.content,
-              },
-            },
-          ],
-        },
-        Link: {
-          url: row.url,
-        },
-        Category: {
-          select: {
-            name: row.category,
-          },
-        },
-        Sent: {
-          date: {
-            start: row.sent,
-          },
+const addItemToAirtable = async (row: any) => {
+  // get users from user table:
+  const results = await shareTable
+    .select({
+      // TODO: update to use discord id
+      filterByFormula: `{Discord handle} = "${row.sharedBy.handle}"`,
+    })
+    .firstPage();
+
+  let userId = results[0]?.id;
+
+  if (!userId) {
+    // create user in table
+    console.log(`INFO: User ${row.sharedBy.handle} not found. Creating...`);
+    const result = await shareTable.create([
+      {
+        fields: {
+          "Discord handle": row.sharedBy.handle,
+          "Discord ID": row.sharedBy.id,
         },
       },
-    });
-    console.log(`---------- ENTRY ADDED -----------`);
-  } catch (error) {
-    console.error(error);
+    ]);
+    userId = result[0].getId();
   }
+
+  // create record in db
+  await supplementTable.create([
+    {
+      fields: {
+        "Title 🤖": row.title,
+        "Message 🤖": row.message,
+        "Link 🤖": row.link,
+        "Shared by 🤖": [userId],
+        "Source 🤖": row.source,
+        "Category 🤖": row.category,
+        "Sent 🤖": row.sent,
+        // "Tagged by 🤖": row.taggedBy,
+      },
+    },
+  ]);
 };
 
 // Check for pin emoji reaction
-client.on("messageReactionAdd", async (reaction) => {
+client.on("messageReactionAdd", async (reaction, user) => {
   if (reaction.partial) {
     // If the message this reaction belongs to was removed, the fetching might result in an API error which should be handled
     try {
@@ -153,24 +132,34 @@ client.on("messageReactionAdd", async (reaction) => {
   }
   const message = reaction.message;
   if (isSupplementReaction({ message, reaction })) {
-    try {
-      // Create data object
-      const row = {
-        content: message.content,
-        sharedBy: `${message.author?.username}#${message.author?.discriminator}`,
-        title: message.embeds[0]?.title,
-        url: message.embeds[0]?.url,
-        source: findUrlHost(message.embeds[0]?.url),
-        category: supplementChannels.find(
-          (channel) => channel.id === message.channelId
-        )?.name,
-        sent: message.createdAt,
-      };
-      console.log(`---------- ADDING ROW -----------`);
-      console.log(row);
-      await addItemToNotion(row);
-    } catch (error) {
-      console.log(error);
+    if (message.author) {
+      try {
+        // Create data object
+        const row = {
+          title: message.embeds[0]?.title,
+          message: message.content,
+          link: message.embeds[0]?.url,
+          sharedBy: {
+            id: message.author.id,
+            handle: `${message.author.username}#${message.author.discriminator}`,
+            // handle: "Will | PRTN#7786",
+          },
+          source: findUrlHost(message.embeds[0]?.url),
+          category: supplementChannels.find(
+            (channel) => channel.id === message.channelId
+          )?.name,
+          sent: message.createdAt,
+          taggedBy: `${user.username}#${user.discriminator}`,
+        };
+        console.log(`---------- ADDING ROW -----------`);
+        console.log(row);
+
+        await addItemToAirtable(row);
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      console.log("ERROR: Could not find message author");
     }
   }
 });
