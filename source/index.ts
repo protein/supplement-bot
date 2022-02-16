@@ -106,13 +106,13 @@ const addItemToAirtable = async (row: any) => {
   await supplementTable.create([
     {
       fields: {
-        "Title 🤖": row.title,
-        "Message 🤖": row.message,
-        "Link 🤖": row.link,
-        "Shared by 🤖": [userId],
-        "Source 🤖": row.source,
-        "Category 🤖": row.category,
-        "Sent 🤖": row.sent,
+        "Title": row.title,
+        "Message": row.message,
+        "Link": row.link,
+        "Shared by": [userId],
+        "Source": row.source,
+        "Category": row.category,
+        "Sent": row.sent,
         // "Tagged by 🤖": row.taggedBy,
       },
     },
