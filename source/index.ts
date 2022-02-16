@@ -113,7 +113,7 @@ const addItemToAirtable = async (row: any) => {
         "Source": row.source,
         "Category": row.category,
         "Sent": row.sent,
-        // "Tagged by 🤖": row.taggedBy,
+        "Tagged by": row.taggedBy,
       },
     },
   ]);
