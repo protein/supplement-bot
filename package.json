@@ -1,25 +1,52 @@
 {
-  "name": "protein-supplement",
+  "name": "supplement-bot",
   "version": "0.1.0",
-  "description": "Protein link sharing bot",
-  "main": "index.js",
-  "engines": {
-    "node": "16.x"
-  },
-  "author": "fiigmnt",
-  "license": "MIT",
+  "description": "Collects (emoji)pilled resources on Discord and saves them into Airtable.",
+  "main": "bot.js",
+  "type": "module",
   "scripts": {
-    "dev": "npx ts-node source/index.ts",
-    "build": "npx tsc",
-    "start": "npx tsc && node ./build/index.js"
+    "dev": "nodemon -r dotenv/config bot.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node bot.js"
   },
+  "engines": {
+    "node": "18.x",
+    "npm": "8.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/protein/supplement-bot.git"
+  },
+  "keywords": [
+    "protein",
+    "supplement",
+    "discord"
+  ],
+  "contributors": [
+    {
+      "name": "fiigmnt"
+    },
+    {
+      "name": "Murat Gözel",
+      "email": "murat@gozel.com.tr"
+    }
+  ],
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/protein/supplement-bot/issues"
+  },
+  "homepage": "https://github.com/protein/supplement-bot#readme",
   "devDependencies": {
-    "@types/node": "^17.0.8",
-    "typescript": "^4.5.4"
+    "dotenv": "^16.0.3",
+    "nodemon": "^2.0.20",
+    "pino-pretty": "^9.1.1"
   },
   "dependencies": {
-    "airtable": "^0.11.1",
-    "discord.js": "^13.3.1",
-    "dotenv": "^15.0.0"
+    "airtable": "^0.11.5",
+    "dayjs": "^1.11.5",
+    "discord.js": "^14.5.0",
+    "pino": "^8.6.1",
+    "pino-abstract-transport": "^1.0.0",
+    "underscore": "^1.13.6"
   }
 }
