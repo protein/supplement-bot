@@ -108,6 +108,9 @@ async function registerMessageCollectors() {
 
 const reUrl = /(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9\u00a1-\uffff][a-z0-9\u00a1-\uffff_-]{0,62})?[a-z0-9\u00a1-\uffff]\.)+(?:[a-z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?/gim
 const reactionCollectorFilter = async (reaction, user) => {
+  if (reaction.message.guildId !== guild.id) {
+    return false;
+  }
   const member = await reaction.message.guild.members.fetch(user.id)
   const matches = reaction.message.embeds.length > 0 ? [reaction.message.embeds[0].url] : reaction.message.content.match(reUrl)
   return reaction.message.author
@@ -171,7 +174,7 @@ async function isSupplementMessage(msg, start, end) {
 async function handleCommand(interaction) {
   if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.commandName === 'sync') {
+  if (interaction.commandName === 'sync' && interaction.guildId === guild.id) {
     const channel = await guild.channels.fetch(interaction.channelId)
     logger.info(`[1/3]: Syncing messages in #${channel.name}`)
 
@@ -197,7 +200,7 @@ async function handleCommand(interaction) {
       nonRecognized: records.filter(r => r.discordMessageId.length === 0).length
     }
 
-    const allMessages = await channel.messages.fetch({limit: 100})
+    const allMessages = await channel.messages.fetch({before: channel.lastMessageId, limit: 100})
     const messages = (await Promise.all(allMessages.map(async (msg) => {
       const taggers = await isSupplementMessage(msg, start, end)
       if (taggers === false) {
