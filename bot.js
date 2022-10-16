@@ -63,6 +63,8 @@ new REST()
 const guild = await client.guilds.fetch( process.env['DISCORD_GUILD_ID'] )
 let category = await guild.channels.fetch( process.env['DISCORD_CATEGORY_ID'] )
 
+logger.info(`Connected to the server ${guild.name}`)
+
 await fetchSupplementChannels(guild, category)
 
 async function fetchSupplementChannels() {
@@ -83,6 +85,8 @@ async function registerMessageCollectors() {
     messageCollector.on('collect', registerReactionCollector)
     messageCollectors.set(channel.id, messageCollector)
   })
+
+  logger.info(`Observing reactions in ${category.children.cache.map(channel => channel.name).join(', ')}`)
 }
 
 const reactionCollectorFilter = (reaction, user) => reaction.emoji.id === process.env['DISCORD_EMOJI_ID']
