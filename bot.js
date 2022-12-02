@@ -185,7 +185,7 @@ async function handleCommand(interaction) {
 
     const records = (await supplementTable
       .select({
-        filterByFormula: `AND(IS_AFTER({Message%20Sent}, "${start.toISOString()}"), IS_BEFORE({Message%20Sent}, "${end.toISOString()}"))`,
+        filterByFormula: `AND(IS_AFTER({Message Sent}, "${start.toISOString()}"), IS_BEFORE({Message Sent}, "${end.toISOString()}"))`,
         maxRecords: 100,
         fields: ['fldfVhHHPaWV5OqQH', 'fldQaUJPRrlmUb4ge'] // Title, [BOT] Discord Message Id
       })
