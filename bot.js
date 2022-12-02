@@ -180,8 +180,8 @@ async function handleCommand(interaction) {
 
     interaction.deferReply({ ephemeral: true })
 
-    const start = dayjs.utc().startOf('month')
-    const end = dayjs.utc().endOf('month')
+    const end = dayjs.utc()
+    const start = end.subtract(45, 'days')
 
     const records = (await supplementTable
       .select({
