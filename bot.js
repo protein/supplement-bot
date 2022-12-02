@@ -281,14 +281,16 @@ async function addSupplementToAirtable(payload) {
     if (records.length === 0) {
       logger.info(`Adding ${payload.sharer.discordUsername} to the Sharers table.`)
 
-      const newSharer = await sharersTable.create([{
+      const newSharerResults = await sharersTable.create([{
         fields: {
           'Discord handle': payload.sharer.discordUsername,
           'Discord ID': payload.sharer.discordId
         }
       }])
 
-      payload.sharer.airtableId = newSharer.getId()
+      logger.info(`New sharer ${payload.sharer.discordUsername} created successfully with Airtable id: ${newSharerResults[0].getId()}`)
+
+      payload.sharer.airtableId = newSharerResults[0].getId()
     }
     else {
       logger.info(`The sharer ${payload.sharer.discordUsername} found in Sharers table.`)

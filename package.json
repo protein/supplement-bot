@@ -1,6 +1,6 @@
 {
   "name": "supplement-bot",
-  "version": "v1.0.0-beta.6",
+  "version": "v1.0.0-beta.7",
   "description": "Collects (emoji)pilled resources on Discord and saves them into Airtable.",
   "main": "bot.js",
   "type": "module",
