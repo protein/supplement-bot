@@ -185,7 +185,7 @@ async function handleCommand(interaction) {
 
     const records = (await supplementTable
       .select({
-        filterByFormula: `AND(IS_AFTER({Sent}, "${start.toISOString()}"), IS_BEFORE({Sent}, "${end.toISOString()}"))`,
+        filterByFormula: `AND(IS_AFTER({Message%20Sent}, "${start.toISOString()}"), IS_BEFORE({Message%20Sent}, "${end.toISOString()}"))`,
         maxRecords: 100,
         fields: ['fldfVhHHPaWV5OqQH', 'fldQaUJPRrlmUb4ge'] // Title, [BOT] Discord Message Id
       })
@@ -225,7 +225,7 @@ async function handleCommand(interaction) {
     logger.info(`[3/3]: Found ${messages.length}/${allMessages.size} messages as supplement in #${channel.name} channel.`)
 
     // Send sync results
-    const content = `The #${channel.name} sync report for the current month:\n\n` +
+    const content = `The #${channel.name} sync report for the las 45 days:\n\n` +
       (messages.length === 0 ?
         `✅ There aren't any messages tagged as supplement.\n` :
         `✅ ${messages.length} messages tagged as supplement from ${allMessages.size} messages.\n`) +
@@ -313,6 +313,7 @@ async function addSupplementToAirtable(payload) {
         'Link': payload.link,
         'Shared by': [payload.sharer.airtableId],
         'Tagged by': payload.taggers[0].discordUsername,
+        'Message Sent': dayjs.utc(payload.timestamp).toISOString(),
         'Sent': dayjs.utc().toISOString(),
         'Message': payload.comment,
         'Source': payload.source,
