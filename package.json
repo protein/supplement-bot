@@ -1,6 +1,6 @@
 {
   "name": "supplement-bot",
-  "version": "0.1.0",
+  "version": "v1.0.0-beta.5",
   "description": "Collects (emoji)pilled resources on Discord and saves them into Airtable.",
   "main": "bot.js",
   "type": "module",
@@ -38,6 +38,7 @@
   "homepage": "https://github.com/protein/supplement-bot#readme",
   "devDependencies": {
     "dotenv": "^16.0.3",
+    "node-releaser": "^2.0.0-beta.2",
     "nodemon": "^2.0.20",
     "pino-pretty": "^9.1.1"
   },
